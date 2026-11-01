@@ -1,0 +1,24 @@
+*mrreview.txt*  GitLab の MR を Neovim のネイティブ diff でレビューする
+
+コマンドと設定の一覧は README.md にある。
+
+COMMANDS                                                     *mrreview-commands*
+
+:MrReview [base] [--dir {dir}]    レビューを開始する。! で確認済みも表示する。
+:MrReviewScope                    レビュー単位を選んで開始または切り替える。
+:MrReviewFiles                    変更ファイルの一覧から選ぶ。
+:MrReviewOff                      レビューを終了する。
+:MrComment                        カーソル行または選択範囲にコメントを投稿する。
+:MrThread                         カーソル行の discussion を開く。
+
+レビュー中は <leader>m? でキーとコマンドの一覧を表示する。
+
+SETUP                                                           *mrreview-setup*
+
+require("mrreview").setup({opts})
+
+  scopes         追加のレビュー単位の配列。
+  scope_markers  プロジェクトの境界とみなすファイル名の配列。
+  keymaps        レビュー対象のバッファに張るキー。false で割り当てを外す。
+
+ vim:tw=78:ft=help:norl:
