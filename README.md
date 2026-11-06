@@ -1,28 +1,30 @@
-# mrreview.nvim
+# mrreview.nvim 💅✨
 
-GitLab の Merge Request (MR) を、Neovim の実バッファとネイティブ diff のままレビューするプラグインです。
-画面を専用 UI へ切り替えないので、レビュー中も LSP や DAP をそのまま使えます。
+**English** | [日本語](README.ja.md)
 
-## 機能
+This plugin lets you review GitLab Merge Requests (MRs) right inside Neovim, using real buffers and native diff mode 💖✨  
+No switching to some special UI, sooo your LSP and DAP keep working the whole time you review 🔥
 
-- 変更ファイルを順に開き、ネイティブ diff で表示します。
-- `git diff` の差分だけでもレビューできます。MR があれば `glab` 経由で自動的に関連付けます。
-- MR のコメントを差分上に表示し、投稿、返信、resolve、削除ができます。
-- draft を溜めて一括で公開できます。
-- 確認済みにしたファイルを記憶します。差分が変わると確認済みは無効になります。
-- プロジェクトの境界とテストかどうかからレビュー単位を自動で作り、絞り込めます。
-- ローカルの HEAD と MR のずれを検出し、statusline 用の情報として返します。
+## 🌈 What it can do
 
-## 必要なもの
+- 📂 Opens the changed files one by one and shows them in native diff.
+- 🧩 Works with just a plain `git diff` too! If there's an MR, it hooks it up automatically through `glab` 🔗
+- 💬 Shows MR comments right on the diff, and you can post, reply, resolve, and delete them.
+- 📝 Stack up drafts and publish them all at once 🚀
+- ✅ Remembers which files you marked as reviewed. If the diff changes, that mark gets reset (no cheating lol 🙅‍♀️)
+- 🗂️ Builds review scopes automatically from project boundaries and whether a file is a test, so you can narrow things down.
+- 🕵️‍♀️ Detects when your local HEAD and the MR drift apart, and returns that info for your statusline.
 
-- Neovim 0.12 以上。動作確認は v0.12.5 で行っています。
+## 🛍️ Requirements
+
+- Neovim 0.12 or newer. Tested on v0.12.5 🧪
 - `git`
-- [glab](https://gitlab.com/gitlab-org/cli)。MR 連携に使い、認証は `glab` 側に任せます。
-- [fzf-lua](https://github.com/ibhagwan/fzf-lua)。`:MrReviewScope` と `:MrReviewFiles` の一覧に使います。
+- [glab](https://gitlab.com/gitlab-org/cli). Used for the MR integration, and auth is left to `glab` 🔐
+- [fzf-lua](https://github.com/ibhagwan/fzf-lua). Used for the lists in `:MrReviewScope` and `:MrReviewFiles` 🔍
 
-## 導入
+## 📦 Install
 
-lazy.nvim では次のように書きます。
+With lazy.nvim, it's just this 🍋
 
 ```lua
 {
@@ -32,49 +34,49 @@ lazy.nvim では次のように書きます。
 }
 ```
 
-他のプラグインマネージャでは `lua/` を runtimepath に載せたうえで、`require("mrreview").setup({})` を呼びます。
-コマンドは `setup()` が登録します。
+With other plugin managers, put `lua/` on your runtimepath and call `require("mrreview").setup({})`.  
+`setup()` is what registers the commands, so don't skip it okay? 🥺
 
-## 使い方
+## 🎀 Usage
 
-`:MrReview` で開始し、`<Tab>` と `]c` で移動して、`<leader>x` で確認済みにして閉じます。
+Start with `:MrReview`, move around with `<Tab>` and `]c`, then hit `<leader>x` to mark the file reviewed and close it 💅
 
-| コマンド | 内容 |
+| Command | What it does |
 |---|---|
-| `:MrReview [base] [--dir <dir>]` | レビューを開始する。`!` を付けると確認済みも表示する |
-| `:MrReviewScope` | レビュー単位を選んで開始または切り替える |
-| `:MrReviewFiles` | 変更ファイルの一覧から選ぶ |
-| `:MrReviewNext`、`:MrReviewPrev` | 次、前の変更ファイルへ移動する |
-| `:MrReviewDiff` | diff 表示を現在のバッファに同期する |
-| `:MrReviewFold` | 未変更行の折りたたみを切り替える |
-| `:MrReviewClose` | 現在のファイルを閉じる。MR 連携時は確認済みとして記録する |
-| `:MrReviewed`、`:MrReviewedClear` | 確認済みを個別に解除する、すべて解除する |
-| `:MrReviewOff` | レビューを終了する |
-| `:MrComment` | カーソル行または選択範囲にコメントを投稿する |
-| `:MrPeek` | カーソル行のコメントをポップアップで読む |
-| `:MrThread` | カーソル行の discussion を開く |
-| `:MrNotes` | 行に紐づかない MR 全体のコメントを開く |
-| `:MrDraftToggle`、`:MrDraftPublish`、`:MrDraftDiscard` | draft の切り替え、一括公開、全破棄 |
+| `:MrReview [base] [--dir <dir>]` | Start a review. Add `!` to also show reviewed files |
+| `:MrReviewScope` | Pick a review scope to start or switch to |
+| `:MrReviewFiles` | Pick from the list of changed files |
+| `:MrReviewNext`, `:MrReviewPrev` | Go to the next / previous changed file |
+| `:MrReviewDiff` | Sync the diff view to the current buffer |
+| `:MrReviewFold` | Toggle folding of unchanged lines |
+| `:MrReviewClose` | Close the current file. With an MR, it's recorded as reviewed |
+| `:MrReviewed`, `:MrReviewedClear` | Unmark one file as reviewed / unmark everything |
+| `:MrReviewOff` | End the review |
+| `:MrComment` | Post a comment on the cursor line or the selected range |
+| `:MrPeek` | Read the comments on the cursor line in a popup |
+| `:MrThread` | Open the discussion on the cursor line |
+| `:MrNotes` | Open the MR-wide comments that aren't tied to a line |
+| `:MrDraftToggle`, `:MrDraftPublish`, `:MrDraftDiscard` | Toggle drafts, publish them all, discard them all |
 
-base を省略すると、MR の base を使います。
-MR も無いときは `develop`、`main`、`master` の順に探します。
+If you leave out base, it uses the MR's base 🎯  
+If there's no MR either, it looks for `develop`, `main`, then `master`, in that order.
 
-## 設定
+## ⚙️ Config
 
 ```lua
 require("mrreview").setup({
-    -- diff から自動で作る単位に加えて選べるレビュー単位
+    -- Extra review scopes you can pick, on top of the ones built automatically from the diff
     scopes = {
         {
-            kind = "layer", -- project、subtree、layer、entrypoint、test、test-layer のいずれか
+            kind = "layer", -- one of project, subtree, layer, entrypoint, test, test-layer
             name = "domain",
-            description = "domain 層",
+            description = "domain layer",
             patterns = { "backend/app/domain/**", "**/backend/app/domain/**" },
         },
     },
-    -- プロジェクトの境界とみなすファイル。省略時は pyproject.toml、package.json、Cargo.toml など
+    -- Files that mark a project boundary. Defaults to pyproject.toml, package.json, Cargo.toml, etc.
     scope_markers = nil,
-    -- レビュー対象のバッファにだけ張るキー。値は文字列か文字列の配列で、false なら割り当てない
+    -- Keys mapped only on buffers under review. A string or a list of strings; false means no mapping
     keymaps = {
         next_file = { "<Tab>", "]r" },
         prev_file = { "<S-Tab>", "[r" },
@@ -89,19 +91,19 @@ require("mrreview").setup({
 })
 ```
 
-上の `keymaps` の値は既定値です。
+The `keymaps` values above are the defaults ⌨️✨
 
-## statusline
+## 📊 statusline
 
-`require("mrreview").status()` は、レビュー中なら `{ text, label, hl }` を返し、それ以外では `nil` を返します。
-遅延読み込みしている場合は `package.loaded["mrreview"]` を確認してから呼ぶと、statusline の描画でプラグインを読み込まずに済みます。
+`require("mrreview").status()` returns `{ text, label, hl }` while you're reviewing, and `nil` otherwise.  
+If you lazy-load the plugin, check `package.loaded["mrreview"]` before calling it, so drawing the statusline doesn't load the plugin for no reason 💡
 
-## テスト
+## 🧪 Tests
 
 ```sh
 nvim --headless -u NONE -l tests/run.lua
 ```
 
-## ライセンス
+## 📜 License
 
-MIT
+MIT 💖
