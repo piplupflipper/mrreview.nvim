@@ -28,6 +28,7 @@ local position = require("mrreview.position")
 local async = require("mrreview.async")
 local reviewed = require("mrreview.reviewed")
 local scopes = require("mrreview.scopes")
+local order = require("mrreview.order")
 
 local M = {}
 
@@ -42,6 +43,7 @@ local state = {
     scope = nil, -- 現在のスコープ ({ name, patterns } / { name, paths }) / 全ファイルは nil
     scopes = {}, -- setup(opts) で受け取る名前付きパススコープ
     scope_markers = nil, -- 自動導出のプロジェクトマーカー上書き (nil は scopes.default_markers)
+    order = {}, -- 変更ファイルとタブを並べる glob の配列 (setup の order。空なら git の順)
     derived_scopes = nil, -- all_files から導出したスコープ (初回の :MrReviewScope で構築)
     include_reviewed = false, -- :MrReview! の状態
     idx = 1, -- 現在表示中ファイルの 1-origin インデックス
@@ -657,7 +659,9 @@ local function finish_start(parsed, review_dir, generation, mr, mr_err)
     end
     -- 全ファイルを保持し、通常起動ではスコープを適用しない。確認済みの除外は
     -- 既存仕様どおり維持し、:MrReviewScope でスコープを切り替えても同じ状態を使う。
-    state.all_files = files
+    -- 読む順 (setup の order) はここで 1 回だけ適用する。スコープと確認済みの絞り込みは
+    -- all_files の順を保つので、以後の一覧もこの順になる。
+    state.all_files = order.sort(files, state.order)
     state.scope = nil
     state.derived_scopes = nil
     state.include_reviewed = parsed.bang
@@ -697,6 +701,7 @@ local function finish_start(parsed, review_dir, generation, mr, mr_err)
     for _, f in ipairs(files) do
         add_review_buffer(state.root .. "/" .. f.new)
     end
+    order.sort_tabs(state.root, files)
 
     -- 起動シーケンスの notify 連発 (hit-enter 誘発) のため停止 (notify() 上のコメント参照)
     -- local mrinfo = state.mr
@@ -780,6 +785,7 @@ function M.select_scope(scope)
         end
     end
     add_scope_buffers(files)
+    order.sort_tabs(state.root, files)
     show_file(state.idx)
     notify(string.format("スコープ: %s (%d ファイル)", scope and scope.name or "全ファイル", #files))
 end
@@ -1091,8 +1097,8 @@ function M.close_current()
     notify(string.format("閉じました: %s (残り %d ファイル%s)", removed.new, #state.files, mark_note))
 end
 
--- 確認済みを解除して一覧へ戻す。除外されていたファイルは末尾に追加し、bufferline の
--- タブと移動キーも復元する (:MrReview! では一覧に居るので解除候補から外すだけ)。
+-- 確認済みを解除して一覧へ戻す。除外されていたファイルは all_files の順の位置へ戻し、
+-- bufferline のタブと移動キーも復元する (:MrReview! では一覧に居るので解除候補から外すだけ)。
 local function restore_reviewed(e)
     reviewed.unmark(mr_key(), e.new)
     for i, x in ipairs(state.reviewed_entries) do
@@ -1104,8 +1110,24 @@ local function restore_reviewed(e)
     for _, f in ipairs(state.files) do
         if f.new == e.new then return end
     end
-    state.files[#state.files + 1] = e
+    -- all_files の中の位置で挿入先を決める。表示中のファイルより前に入るなら idx と
+    -- plain_idx をずらし、表示中のファイルを指したままにする。
+    local rank = {}
+    for i, f in ipairs(state.all_files) do
+        rank[f.new] = i
+    end
+    local at = #state.files + 1
+    for i, f in ipairs(state.files) do
+        if (rank[f.new] or math.huge) > (rank[e.new] or math.huge) then
+            at = i
+            break
+        end
+    end
+    table.insert(state.files, at, e)
+    if at <= state.idx then state.idx = state.idx + 1 end
+    if state.plain_idx and at <= state.plain_idx then state.plain_idx = state.plain_idx + 1 end
     add_review_buffer(state.root .. "/" .. e.new)
+    order.sort_tabs(state.root, state.files)
 end
 
 -- 確認済みファイルを選んで解除する。戻したファイルをそのまま表示して見直しを始める。
@@ -1742,6 +1764,7 @@ function M.setup(opts)
     buf_maps = build_buf_maps(opts and opts.keymaps)
     state.scopes = (opts and opts.scopes) or {}
     state.scope_markers = opts and opts.scope_markers
+    state.order = (opts and opts.order) or {}
     state.ns = vim.api.nvim_create_namespace("mrreview")
     local group = vim.api.nvim_create_augroup("MrReview", { clear = true })
     vim.api.nvim_create_autocmd("BufLeave", {

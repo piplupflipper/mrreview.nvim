@@ -77,6 +77,9 @@ require("mrreview").setup({
     },
     -- プロジェクトの境界とみなすファイル。省略時は pyproject.toml、package.json、Cargo.toml など
     scope_markers = nil,
+    -- ファイルを読む順。最初に一致した glob の位置で並べて、どれにも一致しないファイルは最後に置くよ。
+    -- 変更ファイルの一覧、]r/[r、bufferline.nvim のタブがこの順になるよ。空なら git の順のまま
+    order = { "**/domain/**", "**/application/**", "**/adapter/**", "**/presentation/**" },
     -- レビュー対象のバッファにだけ張るキー。値は文字列か文字列の配列で、false なら割り当てない
     keymaps = {
         next_file = { "<Tab>", "]r" },
