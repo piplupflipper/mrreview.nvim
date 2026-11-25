@@ -6,6 +6,8 @@ COMMANDS                                                     *mrreview-commands*
 
 :MrReview [base] [--dir {dir}]    レビューを開始する。! で確認済みも表示する。
 :MrReviewScope                    レビュー単位を選んで開始または切り替える。
+                                  候補には、全コンポーネントからテストを除いた
+                                  単位 (prod) も含む。
 :MrReviewFiles                    変更ファイルの一覧から選ぶ。
 :MrReviewOff                      レビューを終了する。
 :MrComment                        カーソル行または選択範囲にコメントを投稿する。

@@ -87,4 +87,42 @@ test("key help opens without any other configuration", function()
     assert(text:find("キーヘルプ (float)", 1, true), text)
 end)
 
+test("derived scopes include production files across components without tests", function()
+    local scopes = require("mrreview.scopes")
+    local root = vim.fn.tempname()
+    for _, dir in ipairs({ "svc/backend", "svc/frontend" }) do
+        vim.fn.mkdir(root .. "/" .. dir, "p")
+        vim.fn.writefile({}, root .. "/" .. dir .. "/pyproject.toml")
+    end
+
+    local function prod_scope(files)
+        for _, s in ipairs(scopes.derive(root, files)) do
+            if s.kind == "prod" then return s end
+        end
+    end
+
+    local files = {
+        { status = "M", old = "svc/backend/app/main.py", new = "svc/backend/app/main.py" },
+        { status = "A", new = "svc/backend/tests/test_main.py" },
+        { status = "R", old = "svc/frontend/src/old.ts", new = "svc/frontend/src/new.ts" },
+        { status = "M", old = "svc/frontend/src/a.test.ts", new = "svc/frontend/src/a.test.ts" },
+        { status = "M", old = "infra/.env", new = "infra/.env" },
+    }
+    local prod = prod_scope(files)
+    assert(prod, "production scope must exist")
+    assert_equal(prod.paths, {
+        ["svc/backend/app/main.py"] = true,
+        ["svc/frontend/src/old.ts"] = true,
+        ["svc/frontend/src/new.ts"] = true,
+        ["infra/.env"] = true,
+    })
+    assert_equal(scopes.derive(root, files)[1].kind, "prod", "production scope comes first")
+
+    -- テスト以外が 1 コンポーネントだけならコンポーネントの候補と同じなので出さない
+    assert_equal(prod_scope({ files[1], files[2] }), nil)
+    -- テストが無ければ全ファイルと同じなので出さない
+    assert_equal(prod_scope({ files[1], files[3], files[5] }), nil)
+    vim.fn.delete(root, "rf")
+end)
+
 print(string.format("1..%d", passed))

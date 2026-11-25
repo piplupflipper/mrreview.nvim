@@ -143,6 +143,31 @@ function M.derive(root, files, markers)
     end)
 
     local scopes = {}
+
+    -- テストを除く全ファイル。コンポーネント単位の候補はテストとそれ以外を分けるだけで、
+    -- コンポーネントをまたいでテストだけを外す手段が他に無いため、まとめた候補を先頭に置く。
+    -- テスト以外が 1 グループしか無いならそのコンポーネントの候補と同じなので出さない。
+    local prod_paths, prod_groups, has_test = {}, 0, false
+    for _, g in ipairs(list) do
+        if g.test then
+            has_test = true
+        else
+            prod_groups = prod_groups + 1
+            for p in pairs(g.paths) do
+                prod_paths[p] = true
+            end
+        end
+    end
+    if has_test and prod_groups >= 2 then
+        scopes[1] = {
+            kind = "prod",
+            name = "テストを除く全ファイル",
+            description = "全コンポーネントのテスト以外",
+            paths = prod_paths,
+            derived = true,
+        }
+    end
+
     for _, g in ipairs(list) do
         local info = comps[g.comp]
         -- basename が衝突する別コンポーネントがあるときだけ、フルパスで区別する。

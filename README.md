@@ -13,6 +13,7 @@ No switching to some special UI, sooo your LSP and DAP keep working the whole ti
 - 📝 Stack up drafts and publish them all at once 🚀
 - ✅ Remembers which files you marked as reviewed. If the diff changes, that mark gets reset (no cheating lol 🙅‍♀️)
 - 🗂️ Builds review scopes automatically from project boundaries and whether a file is a test, so you can narrow things down.
+  There's also one that skips every test across all projects, for when you only want the real code 🙈
 - 🕵️‍♀️ Detects when your local HEAD and the MR drift apart, and returns that info for your statusline.
 
 ## 🛍️ Requirements
