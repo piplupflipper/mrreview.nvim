@@ -21,6 +21,9 @@ require("mrreview").setup({opts})
 
   scopes         追加のレビュー単位の配列。
   scope_markers  プロジェクトの境界とみなすファイル名の配列。
+  order          ファイルを読む順を決める glob の配列。最初に一致したパターンの
+                 位置で並べ、どれにも一致しないファイルは最後に置く。変更ファイル
+                 の一覧と bufferline.nvim のタブがこの順になる。
   keymaps        レビュー対象のバッファに張るキー。false で割り当てを外す。
 
  vim:tw=78:ft=help:norl:

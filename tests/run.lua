@@ -125,4 +125,41 @@ test("derived scopes include production files across components without tests", 
     vim.fn.delete(root, "rf")
 end)
 
+test("order sorts files by the first matching pattern and keeps git order within a rank", function()
+    local order = require("mrreview.order")
+    local files = {
+        { status = "M", old = "app/adapter/repo.py", new = "app/adapter/repo.py" },
+        { status = "M", old = "app/application/b.py", new = "app/application/b.py" },
+        { status = "M", old = "app/application/a.py", new = "app/application/a.py" },
+        { status = "R", old = "app/legacy/model.py", new = "app/x/model.py" },
+        { status = "M", old = "README.md", new = "README.md" },
+        { status = "A", new = "app/domain/entity.py" },
+    }
+    local patterns = { "**/domain/**", "**/application/**", "**/adapter/**" }
+    local paths = vim.tbl_map(function(f) return f.new end, order.sort(files, patterns))
+    assert_equal(paths, {
+        "app/domain/entity.py",
+        "app/application/b.py",
+        "app/application/a.py",
+        "app/adapter/repo.py",
+        "app/x/model.py",
+        "README.md",
+    })
+
+    -- rename は旧パスでも一致を見る
+    paths = vim.tbl_map(function(f) return f.new end, order.sort(files, { "**/legacy/**" }))
+    assert_equal(paths[1], "app/x/model.py")
+
+    -- order が空なら元の順のまま、元の配列は変えない
+    assert_equal(order.sort(files, {}), files)
+    assert_equal(files[1].new, "app/adapter/repo.py")
+end)
+
+test("tab comparator puts review buffers first in the given order", function()
+    local order = require("mrreview.order")
+    local tabs = { { id = 1 }, { id = 5 }, { id = 3 }, { id = 2 }, { id = 4 } }
+    table.sort(tabs, order.tab_comparator({ [3] = 1, [5] = 2, [2] = 3 }))
+    assert_equal(vim.tbl_map(function(t) return t.id end, tabs), { 3, 5, 2, 1, 4 })
+end)
+
 print(string.format("1..%d", passed))

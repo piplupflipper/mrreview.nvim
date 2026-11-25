@@ -77,6 +77,9 @@ require("mrreview").setup({
     },
     -- Files that mark a project boundary. Defaults to pyproject.toml, package.json, Cargo.toml, etc.
     scope_markers = nil,
+    -- Order to read files in. Each file goes to the first glob it matches; files that match none go last.
+    -- The file list, ]r/[r, and the bufferline.nvim tabs all follow this order. Empty keeps git's order
+    order = { "**/domain/**", "**/application/**", "**/adapter/**", "**/presentation/**" },
     -- Keys mapped only on buffers under review. A string or a list of strings; false means no mapping
     keymaps = {
         next_file = { "<Tab>", "]r" },
